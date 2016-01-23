@@ -74,7 +74,7 @@ function slack_TicketOpen($vars) {
 
 	$slack = whmcs2slack_module_settings();
 	if ( !empty($slack["tickets_channel"] ) ) {
-		 $companyname=''; 
+		 $clientname=''; 
 		 if (!empty($vars["userid"])) {
 			$adminuser = "apiapi";
 			$responsetype = "json";  // Probably unnecessary
@@ -85,11 +85,11 @@ function slack_TicketOpen($vars) {
 			 $values["responsetype"] = $responsetype ; 
 
 			 $getclientsdetails = localAPI($command,$values,$adminuser);
-			 $companyname=$getclientsdetails["companyname"];
+			 $clientname=$getclientsdetails["firstname"] .' ' . $getclientsdetails["lastname"];
 		 }
 		$shortmessage='New '.$vars['priority'] .' priority ticket: '. $vars['subject'] ; 
 		$longmessage =$CONFIG['SystemURL'].'/'.$customadminpath.'/supporttickets.php?action=viewticket&id='.$vars['ticketid'] . PHP_EOL 
-				. 'Company: ' . $companyname . PHP_EOL 
+				. 'Client: ' . $clientname . PHP_EOL 
 				. 'Message: ' . PHP_EOL . $vars['message'] ; 
 		sendslack(  $slack['url'],
 					$slack['botname'],
@@ -108,7 +108,7 @@ function slack_TicketUserReply($vars) {
 	global $customadminpath, $CONFIG;
 	$slack = whmcs2slack_module_settings();
 	if ( !empty($slack["tickets_channel"] ) ) {
-		 $companyname=''; 
+		 $clientname=''; 
 		 if (!empty($vars["userid"])) {
 			$adminuser = "apiapi"; // set your own admin user
 			$responsetype = "json";  // Probably unnecessary
@@ -119,12 +119,14 @@ function slack_TicketUserReply($vars) {
 			 $values["responsetype"] = $responsetype ; 
 
 			 $getclientsdetails = localAPI($command,$values,$adminuser);
-			 $companyname=$getclientsdetails["companyname"];
+			 $clientname=$getclientsdetails["firstname"] .' ' . $getclientsdetails["lastname"];
+
 		 }
-		$shortmessage='Ticket '.$vars['ticketid'].' update: '. $vars['subject'] ; 
+		$shortmessage='A new ticket response has been made to: '. $vars['subject'].' Ticket #'.$vars['ticketid'] ; 
 		$longmessage =$CONFIG['SystemURL'].'/'.$customadminpath.'/supporttickets.php?action=viewticket&id='.$vars['ticketid'] . PHP_EOL 
-				. 'Company: ' . $companyname . PHP_EOL 
-				. 'Message: ' . PHP_EOL . $vars['message'] ; 
+				. 'Client: ' . $clientname. PHP_EOL 
+				. 'Priority: ' . $vars['priority'] . PHP_EOL
+				. 'Message: ' . $vars['message'] . PHP_EOL; 
 
 				sendslack(  $slack['url'],
 					$slack['botname'],
@@ -232,4 +234,3 @@ add_hook("AddTransaction",999,"slack_AddTransaction");
 add_hook("TicketOpen",999,"slack_TicketOpen");
 add_hook("TicketOpenAdmin",999,"slack_TicketOpen");
 add_hook("TicketUserReply",999,"slack_TicketUserReply");
-
